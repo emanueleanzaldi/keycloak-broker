@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: "keycloak-broker"
+  cloud:
+    function:
+      definition: event;adminEvent
+    stream:
+      bindings:
+        event-in-0:
+          destination: keycloak-events
+          group: event-consumer
+          content-type: application/json
+        adminEvent-in-0:
+          destination: keycloak-admin-events
+          group: event-consumer
+          content-type: application/json
+      kafka:
+        binder:
+          brokers:
+            - kafka:9094
+          auto-create-topics: true
+#    function:
+#        definition: event;adminEvent
+#      stream:
+#        bindings:
+#          event-in-0:
+#            destination: keycloak-events  # Il topic su Kafka dove ascolti gli eventi
+##            content-type: application/json  # Il tipo di contenuto del messaggio
+#            group: event-consumer  # Definisci qui il gruppo consumer per gli eventi
+#          adminEvent-in-0:
+#            destination: keycloak-admin-events  # Un altro topic per eventi amministrativi (se necessario)
+##            content-type: application/json
+#            group: event-consumer  # Definisci qui il gruppo consumer per gli eventi admin
+#
+#        kafka:
+#          binder:
+#            brokers: kafka:9094  # Questo è il bootstrap server di Kafka (come definito nel docker-compose)
+#            defaultBrokerPort: 9094
+#            autoCreateTopics: true  # Assicura che i topic vengano creati automaticamente se non esistono

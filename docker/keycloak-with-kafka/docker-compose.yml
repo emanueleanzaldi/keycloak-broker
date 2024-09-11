@@ -1,0 +1,59 @@
+services:
+  keycloak:
+    image: keycloak-with-kafka:latest
+    container_name: keycloak
+    ports:
+      - "9080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+#      KC_DB: postgres
+#      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+#      KC_DB_USERNAME: keycloak
+#      KC_DB_PASSWORD: password
+      KC_HOSTNAME: localhost
+      KC_LOG_LEVEL: DEBUG
+      KC_METRICS_ENABLED: 'true'
+      KC_SPI_EVENTS_LISTENER_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KC_SPI_EVENTS_LISTENER_KAFKA_CLIENT_ID: clientIdCustom
+      KC_SPI_EVENTS_LISTENER_KAFKA_SECURITY_PROTOCOL: PLAINTEXT
+      KC_SPI_EVENTS_LISTENER_KAFKA_TOPIC_EVENTS: keycloak-events
+      KC_SPI_EVENTS_LISTENER_KAFKA_TOPIC_ADMIN_EVENTS: keycloak-admin-events
+    command: "start-dev"
+    networks:
+      - networkName
+
+  zookeeper:
+    restart: always
+    image: bitnami/zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - networkName
+
+  kafka:
+    depends_on:
+      - "zookeeper"
+    image: bitnami/kafka:latest
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      KAFKA_CFG_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://kafka:9094
+      KAFKA_CFG_LISTENERS: INSIDE://:9092,OUTSIDE://:9094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+     #KAFKA_CREATE_TOPICS: "keycloak-events:1:1"
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - networkName
+
+networks:
+  networkName:
+    driver: bridge
